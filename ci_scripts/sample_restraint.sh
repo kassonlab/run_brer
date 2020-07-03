@@ -2,7 +2,7 @@
 set -ev
 
 pushd $HOME
-  [ -d sample_restraint ] || git clone --depth=1 -b corr-struct https://github.com/jmhays/sample_restraint.git
+  [ -d sample_restraint ] || git clone --depth=1 -b brer https://github.com/jmhays/sample_restraint.git
   pushd sample_restraint
     rm -rf build
     mkdir build

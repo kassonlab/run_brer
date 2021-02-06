@@ -220,10 +220,11 @@ class RunConfig:
 
         # Run it.
         with context as session:
-            session.run()
+            status = session.run()
 
         # In the future runs (convergence, production) we need the ABSOLUTE VALUE of alpha.
         self._logger.info("=====TRAINING INFO======\n")
+        self._logger.info(str(status))
 
         for i in range(len(self.__names)):
             current_name = sites_to_name[context.potentials[i].name]
@@ -233,6 +234,8 @@ class RunConfig:
             self.run_data.set(name=current_name, alpha=current_alpha)
             self.run_data.set(name=current_name, target=current_target)
             self._logger.info("Plugin {}: alpha = {}, target = {}".format(current_name, current_alpha, current_target))
+
+        return status.success
 
     def __converge(self):
 
@@ -244,17 +247,21 @@ class RunConfig:
             md.add_dependency(plugin)
         context = gmx.context.ParallelArrayContext(md, workdir_list=[os.getcwd()])
         with context as session:
-            session.run()
+            status = session.run()
 
         # Get the absolute time (in ps) at which the convergence run finished.
         # This value will be needed if a production run needs to be restarted.
         self.run_data.set(start_time=context.potentials[0].time)
 
         self._logger.info("=====CONVERGENCE INFO======\n")
+        self._logger.info(str(status))
+
         for name in self.__names:
             current_alpha = self.run_data.get('alpha', name=name)
             current_target = self.run_data.get('target', name=name)
             self._logger.info("Plugin {}: alpha = {}, target = {}".format(name, current_alpha, current_target))
+
+        return status.success
 
     def __production(self):
 
@@ -273,30 +280,43 @@ class RunConfig:
             md.add_dependency(plugin)
         context = gmx.context.ParallelArrayContext(md, workdir_list=[os.getcwd()])
         with context as session:
-            session.run()
+            status = session.run()
 
         self._logger.info("=====PRODUCTION INFO======\n")
+        self._logger.info(str(status))
+
         for name in self.__names:
             current_alpha = self.run_data.get('alpha', name=name)
             current_target = self.run_data.get('target', name=name)
             self._logger.info("Plugin {}: alpha = {}, target = {}".format(name, current_alpha, current_target))
 
+        return status.success
+
     def run(self):
         """Perform the MD simulations.
 
         Each Python interpreter process runs a separate ensemble member.
+
+        Raises:
+            RuntimeError if simulation fails.
         """
         phase = self.run_data.get('phase')
 
         self.__change_directory()
 
         if phase == 'training':
-            self.__train()
-            self.run_data.set(phase='convergence')
+            success = self.__train()
+            if success:
+                self.run_data.set(phase='convergence')
         elif phase == 'convergence':
-            self.__converge()
-            self.run_data.set(phase='production')
+            success = self.__converge()
+            if success:
+                self.run_data.set(phase='production')
         else:
-            self.__production()
-            self.run_data.set(phase='training', start_time=0, iteration=(self.run_data.get('iteration') + 1))
+            assert phase == 'production'
+            success = self.__production()
+            if success:
+                self.run_data.set(phase='training', start_time=0, iteration=(self.run_data.get('iteration') + 1))
         self.run_data.save_config(self.state_json)
+        if not success:
+            raise RuntimeError('{} simulation failed.'.format(phase))

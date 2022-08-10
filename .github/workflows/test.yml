@@ -72,6 +72,7 @@ jobs:
       PY: 3.8
       GROMACS: release-2021
       GMXAPI: "gmxapi<0.3"
+      CMAKE: "cmake<3.22"
     steps:
     - name: Prepare OS
       run: |
@@ -100,6 +101,7 @@ jobs:
         export PYTHON=$VIRTUAL_ENV/bin/python
         $PYTHON -m pip install --upgrade pip setuptools wheel
         pip install --upgrade pip setuptools wheel
+        pip install "cmake<3.22"
         pip install --upgrade packaging scikit-build
         pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
         pip install pytest codecov pytest-cov numpy
@@ -109,10 +111,11 @@ jobs:
       id: cache-install
       with:
         path: ~/install
-        key: ${{ env.GROMACS }}-${{ env.PY }}-${{ hashFiles('ci_scripts/install_gromacs_branch.sh') }}
+        key: ${{ env.GROMACS }}-py${{ env.PY }}-cmake${{ env.CMAKE }}-${{ hashFiles('ci_scripts/install_gromacs_branch.sh') }}
     - name: Install GROMACS
       if: steps.cache-install.outputs.cache-hit != 'true'
       run: |
+        . $HOME/venv/bin/activate
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         BRANCH="${GROMACS}" bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_branch.sh
     - name: Test

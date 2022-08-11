@@ -2,27 +2,28 @@
 See Also https://github.com/kassonlab/run_brer/issues/54
 """
 import os
-import pathlib
-from typing import Union
+import json
+import run_data
 from run_brer.directory_helper import DirectoryHelper
 from run_brer.plugin_configs import PluginConfig
 
-#_Path = Union[str, pathlib.Path]
-    directory = os.getcwd()  # under the assumption that the current directory is the main directory
-    # what if it's not?
-    if os.path.exists(os.path.join(directory, 'mem_1')):
-        next()
-    else:
-       directory = os.chdir()
+ensemble_dir = os.path.abspath()  #insert ensemble_dir
+if not os.path.exists(ensemble_dir):
+    raise RuntimeError(f'Ensemble directory {ensemble_dir} does not exist!')
 
 def get_state_data(iteration: int, allow_incomplete=False):
-    """Collect necessary data from state.json files.
+    """Collect necessary data from previous iter state.json files.
     """
-    ensemble_list = os.listdir(os.path.join(directory, 'mem_'))  # create a list of all mem_* directories
-    for i in range(len(ensemble_list)):
-        with open(os.path.join(ensemble_list[i], 'state.json', 'r')):
-          # pull necessary data
-    return ensemble_list
+    iter_info = {}
+    prev_state = '{}/mem_{}/{}_prev_state.json'.format(ensemble_dir, run_data.get('ensemble_num'), iteration) # is this the correct call for absolute paths?
+    if os.path.exists(prev_state):
+        self.run_data.from_dictionary(json.load(open(prev_state)))
+        iter_info[self.run_data.get('ensemble_num')] = ['simulation_input']['tpr_file']  # not sure i'm calling the json info correctly here
+    elif allow_incomplete:
+        state = '{}/mem_{}/state.json'.format(ensemble_dir, run_data.get('ensemble_num'))
+        self.run_data.from_dictionary(json.load())
+        iter_info[self.run_data.get('ensemble_num')] = ['simulation_input']['tpr_file']
+    return iter_info
 
 
 
@@ -30,19 +31,14 @@ def get_ensemble_estimate(iteration: int, ensemble_list):
     """Collect conformational ensemble estimates through iteration i.
     If iteration i is not provided, collects all conformational ensemble production phase results.
     """
-    if iteration is not None:
-        for i in range(len(ensemble_list)):
-            os.chdir(os.path.join(ensemble_list[i], iteration, 'production'))
-            # collect latest xtc file and place in another directory?
-    else:
-        for i in range(len(ensemble_list)):
-            iterations = os.listdir(os.path.join(directory, 'mem_'))
-            for j in len(iterations):
-                os.chdir(os.path.join(ensemble_list[i], iterations[j], 'production'))
-            # collect latest xtc file from all iterations and place in another directory?
+    ensemble_estimate_paths = {}
+    trajectory_output = '{}/mem_{}/{}/production/*.tpr'.format(ensemble_dir, run_data.get('ensemble_num'), iteration)
+    if os.path.exists(trajectory_output):
+        ensemble_estimate_paths['{}-{}'.format(run_data.get('ensemble_num'), iteration)] = trajectory_output
+    return ensemble_estimate_paths
 
-
-
-def ensemble_estimate_analysis(iteration: int):
+def ensemble_estimate_construction(ensemble_collection):
     """Identify specific results from conformational ensemble estimates for analysis.
     """
+    for ensemble in ensemble_collection:
+        # still piecing this together

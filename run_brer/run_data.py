@@ -82,6 +82,14 @@ class PairParams(MetaData):
         """
         self.set(sites=sites, logging_filename="{}.log".format(self.name))
 
+class SimulationInput(typing.TypedDict):
+    """Stores the simulation input parameters for all restraints."""
+        schema_version: typing.ClassVar[int]
+	    tpr_file: str
+	    checkpoint: typing.Optional[str]
+    def simulation_input(tpr_file: str, checkpoint: typing.Optional[str] = None) -> SimulationInput:
+	    return {'schema_version': 2, 'tpr_file': tpr_file, 'checkpoint': checkpoint}
+
 
 class RunData:
     """Stores (and manipulates, to a lesser extent) all the metadata for a BRER

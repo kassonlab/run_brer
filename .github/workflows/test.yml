@@ -142,7 +142,7 @@ jobs:
         export PYTHON=$VIRTUAL_ENV/bin/python
         source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
         (cd $HOME/gromacs-${GROMACS}/python_packaging/src/ && \
-        $PYTHON -m pip install --no-clean --index-url https://test.pypi.org/simple/ ${{ env.GMXAPI }} --verbose)
+        $PYTHON -m pip install --no-clean --index-url https://test.pypi.org/simple/ "${{ env.GMXAPI }}" --verbose)
         (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
         git tag --list
         pip list

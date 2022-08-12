@@ -2,10 +2,9 @@
 set -ev
 
 pushd $HOME
-# Temporarily use a PR branch.
-#  [ -d brer_plugin ] || git clone --depth=1 https://github.com/kassonlab/brer_plugin.git
-  [ -d brer_plugin ] || git clone --depth=1 -b eirrgang-patch-1 https://github.com/kassonlab/brer_plugin.git
+  [ -d brer_plugin ] || git clone --depth=1 https://github.com/kassonlab/brer_plugin.git
   pushd brer_plugin
+    git pull --ff-only
     rm -rf build
     mkdir build
     pushd build

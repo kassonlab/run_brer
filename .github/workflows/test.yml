@@ -44,14 +44,7 @@ jobs:
         pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
         pip install pytest codecov pytest-cov numpy
     - uses: actions/checkout@v2
-    - name: Cached GROMACS installation
-      uses: actions/cache@v2
-      id: cache-install
-      with:
-        path: ~/install
-        key: ${{ env.GROMACS }}-${{ env.PY }}-${{ runner.os }}-${{ hashFiles('ci_scripts/install_gromacs_2019.sh') }}
     - name: Install GROMACS
-      if: steps.cache-install.outputs.cache-hit != 'true'
       run: |
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_2019.sh
@@ -63,7 +56,7 @@ jobs:
         pip install -r requirements.txt
         export PYTHON=$VIRTUAL_ENV/bin/python
         source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && bash -x ${GITHUB_WORKSPACE}/ci_scripts/pygmx_0_0_7.sh
-        (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
+        bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh
         pwd
         ls
         git tag --list
@@ -121,14 +114,7 @@ jobs:
         pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
         pip install pytest codecov pytest-cov numpy
     - uses: actions/checkout@v2
-    - name: Cached GROMACS installation
-      uses: actions/cache@v2
-      id: cache-install
-      with:
-        path: ~/install
-        key: ${{ env.GROMACS }}-py${{ env.PY }}-cmake${{ env.CMAKE }}-${{ hashFiles('ci_scripts/install_gromacs_branch.sh') }}
     - name: Install GROMACS
-      if: steps.cache-install.outputs.cache-hit != 'true'
       run: |
         . $HOME/venv/bin/activate
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
@@ -146,7 +132,7 @@ jobs:
         mkdir -p $HOME/pip-tmp && \
         TMPDIR=$HOME/pip-tmp \
         $PYTHON -m pip install --no-clean --no-deps --no-build-isolation --verbose "${{ env.GMXAPI }}" --index-url https://test.pypi.org/simple/
-        (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
+        bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh
         git tag --list
         pip list
         export VERSIONINGIT_LOG_LEVEL=INFO
@@ -202,14 +188,7 @@ jobs:
         pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
         pip install pytest codecov pytest-cov numpy
     - uses: actions/checkout@v2
-    - name: Cached GROMACS installation
-      uses: actions/cache@v2
-      id: cache-install
-      with:
-        path: ~/install
-        key: ${{ env.GROMACS }}-py${{ env.PY }}-cmake${{ env.CMAKE }}-${{ hashFiles('ci_scripts/install_gromacs_branch.sh') }}
     - name: Install GROMACS
-      if: steps.cache-install.outputs.cache-hit != 'true'
       run: |
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         BRANCH="${GROMACS}" bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_branch.sh
@@ -224,7 +203,7 @@ jobs:
         mkdir -p $HOME/pip-tmp && \
         TMPDIR=$HOME/pip-tmp \
         $PYTHON -m pip install --no-clean --verbose "${{ env.GMXAPI }}" --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/
-        (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
+        bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh
         git tag --list
         pip list
         export VERSIONINGIT_LOG_LEVEL=INFO

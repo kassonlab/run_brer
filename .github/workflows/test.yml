@@ -49,7 +49,7 @@ jobs:
       id: cache-install
       with:
         path: ~/install
-        key: ${{ env.GROMACS }}-${{ env.PY }}-${{ hashFiles('ci_scripts/install_gromacs_2019.sh') }}
+        key: ${{ env.GROMACS }}-${{ env.PY }}-${{ runner.os }}-${{ hashFiles('ci_scripts/install_gromacs_2019.sh') }}
     - name: Install GROMACS
       if: steps.cache-install.outputs.cache-hit != 'true'
       run: |

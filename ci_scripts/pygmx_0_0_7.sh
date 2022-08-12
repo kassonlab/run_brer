@@ -2,12 +2,13 @@
 set -ev
 
 pushd $HOME
- [ -d gmxapi ] || git clone --depth=1 --no-single-branch https://github.com/kassonlab/gmxapi.git
+ rm -rf gmxapi
+ git clone --depth=1 -b release-0_0_7post1 https://github.com/kassonlab/gmxapi.git
  pushd gmxapi
-  git checkout release-0_0_7post1
   rm -rf build
   mkdir -p build
   pushd build
+   cmake --version
    cmake .. -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DPYTHON_EXECUTABLE=$PYTHON
    make -j2 install
   popd

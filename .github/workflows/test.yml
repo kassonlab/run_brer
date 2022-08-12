@@ -7,72 +7,11 @@ on:
     branches: [ master ]
 
 jobs:
-#  gmx2019:
-#    runs-on: ubuntu-latest
-#    env:
-#      PY: 3.7
-#      GROMACS: release-2019
-#    steps:
-#    - name: Prepare OS
-#      run: |
-#        sudo apt-get update
-#        sudo apt-get install ccache libblas-dev libfftw3-dev liblapack-dev libmpich-dev libxml2-dev mpich ninja-build
-#    - name: Set up Python ${{ env.PY }}
-#      uses: actions/setup-python@v2
-#      with:
-#        python-version: ${{ env.PY }}
-#    - name: Prepare ccache variables
-#      id: ccache_cache
-#      run: |
-#        echo "::set-output name=timestamp::$(date +'%Y-%m-%d-%H-%M-%S')"
-#        echo "::set-output name=dir::$(ccache -k cache_dir)"
-#    - name: ccache cache files
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ steps.ccache_cache.outputs.dir }}
-#        key: ${{ env.GROMACS }}-ccache-${{ steps.ccache_cache.outputs.timestamp }}
-#        restore-keys: |
-#          ${{ env.GROMACS }}-ccache-
-#    - name: Install Python dependencies
-#      run: |
-#        python -m venv $HOME/venv
-#        . $HOME/venv/bin/activate
-#        export PYTHON=$VIRTUAL_ENV/bin/python
-#        $PYTHON -m pip install --upgrade pip setuptools wheel
-#        pip install --upgrade pip setuptools wheel
-#        pip install --upgrade packaging scikit-build
-#        pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
-#        pip install pytest codecov pytest-cov numpy
-#    - uses: actions/checkout@v2
-#    - name: Install GROMACS
-#      run: |
-#        . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
-#        bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_2019.sh
-#    - name: Test
-#      timeout-minutes: 8
-#      run: |
-#        . ./ci_scripts/set_compilers
-#        . $HOME/venv/bin/activate
-#        pip install -r requirements.txt
-#        export PYTHON=$VIRTUAL_ENV/bin/python
-#        source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/pygmx_0_0_7.sh)
-#        (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
-#        pwd
-#        ls
-#        git tag --list
-#        pip list
-#        export VERSIONINGIT_LOG_LEVEL=INFO
-#        versioningit .
-#        pip install ${GITHUB_WORKSPACE}/
-#        $PYTHON -m pytest -rA -l --log-cli-level=info --cov=run_brer tests
-
-  gmx2021:
+  gmx2019:
     runs-on: ubuntu-latest
     env:
-      PY: 3.8
-      GROMACS: release-2021
-      GMXAPI: "gmxapi<0.3"
-      CMAKE: "cmake<3.22"
+      PY: 3.7
+      GROMACS: release-2019
     steps:
     - name: Prepare OS
       run: |
@@ -101,7 +40,83 @@ jobs:
         export PYTHON=$VIRTUAL_ENV/bin/python
         $PYTHON -m pip install --upgrade pip setuptools wheel
         pip install --upgrade pip setuptools wheel
-        pip install "cmake<3.22"
+        pip install --upgrade packaging scikit-build
+        pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
+        pip install pytest codecov pytest-cov numpy
+    - uses: actions/checkout@v2
+    - name: Cached GROMACS installation
+      uses: actions/cache@v2
+      id: cache-install
+      with:
+        path: ~/install
+        key: ${{ env.GROMACS }}-${{ env.PY }}-${{ hashFiles('ci_scripts/install_gromacs_2019.sh') }}
+    - name: Install GROMACS
+      if: steps.cache-install.outputs.cache-hit != 'true'
+      run: |
+        . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
+        bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_2019.sh
+    - name: Test
+      timeout-minutes: 8
+      run: |
+        . ./ci_scripts/set_compilers
+        . $HOME/venv/bin/activate
+        pip install -r requirements.txt
+        export PYTHON=$VIRTUAL_ENV/bin/python
+        source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && bash -x ${GITHUB_WORKSPACE}/ci_scripts/pygmx_0_0_7.sh
+        (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
+        pwd
+        ls
+        git tag --list
+        pip list
+        export VERSIONINGIT_LOG_LEVEL=INFO
+        versioningit .
+        pip install ${GITHUB_WORKSPACE}/
+        $PYTHON -m pytest -rA -l --log-cli-level=info --cov=run_brer tests
+    - name: "Upload artifacts"
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ github.job }}-${{ env.GROMACS }}
+        path: |
+          ~/install/
+          ~/gmxapi/build/
+
+  gmx2021:
+    runs-on: ubuntu-latest
+    env:
+      PY: 3.8
+      GROMACS: release-2021
+      GMXAPI: "gmxapi<0.3"
+      CMAKE: "cmake==3.24.0"
+    steps:
+    - name: Prepare OS
+      run: |
+        sudo apt-get update
+        sudo apt-get install ccache libblas-dev libfftw3-dev liblapack-dev libmpich-dev libxml2-dev mpich ninja-build
+    - name: Set up Python ${{ env.PY }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.PY }}
+    - name: Prepare ccache variables
+      id: ccache_cache
+      run: |
+        echo "::set-output name=timestamp::$(date +'%Y-%m-%d-%H-%M-%S')"
+        echo "::set-output name=dir::$(ccache -k cache_dir)"
+    - name: ccache cache files
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.ccache_cache.outputs.dir }}
+        key: ${{ env.GROMACS }}-ccache-${{ steps.ccache_cache.outputs.timestamp }}
+        restore-keys: |
+          ${{ env.GROMACS }}-ccache-
+    - name: Install Python dependencies
+      run: |
+        python -m venv $HOME/venv
+        . $HOME/venv/bin/activate
+        export PYTHON=$VIRTUAL_ENV/bin/python
+        $PYTHON -m pip install --upgrade pip setuptools wheel
+        pip install --upgrade pip setuptools wheel
+        pip install "${{ env.CMAKE }}"
         pip install --upgrade packaging scikit-build
         pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
         pip install pytest codecov pytest-cov numpy
@@ -125,7 +140,9 @@ jobs:
         . $HOME/venv/bin/activate
         pip install -r requirements.txt
         export PYTHON=$VIRTUAL_ENV/bin/python
-        source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && (cd $HOME/gromacs-${GROMACS}/python_packaging/src/ && $PYTHON -m pip install --no-clean --no-cache-dir . --verbose)
+        source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
+        (cd $HOME/gromacs-${GROMACS}/python_packaging/src/ && \
+        $PYTHON -m pip install --no-clean --index-url https://test.pypi.org/simple/ ${{ env.GMXAPI }} --verbose)
         (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
         git tag --list
         pip list
@@ -142,7 +159,7 @@ jobs:
         path: |
           ~/install/
           ~/gromacs-${{ env.GROMACS }}/python_packaging/
-
+#
 #
 #  gmx2022:
 #    runs-on: ubuntu-latest

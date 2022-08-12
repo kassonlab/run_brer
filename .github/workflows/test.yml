@@ -144,7 +144,7 @@ jobs:
         export PYTHON=$VIRTUAL_ENV/bin/python
         source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
         (cd $HOME/gromacs-${GROMACS}/python_packaging/src/ && \
-        $PYTHON -m pip install --no-clean --no-deps --verbose "${{ env.GMXAPI }}" --index-url https://test.pypi.org/simple/)
+        $PYTHON -m pip install --no-clean --no-deps --no-build-isolation --verbose "${{ env.GMXAPI }}" --index-url https://test.pypi.org/simple/)
         (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
         git tag --list
         pip list
@@ -218,12 +218,10 @@ jobs:
         . ./ci_scripts/set_compilers
         . $HOME/venv/bin/activate
         pip install -r requirements.txt
-        # The following installs are only necessary while we are using test.pypi
-        pip install 'cmake>=3.13' 'setuptools>=42' wheel
         export PYTHON=$HOME/venv/bin/python
         source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
         (cd $HOME/gromacs-${GROMACS}/python_packaging/src/ && \
-        $PYTHON -m pip install --no-clean --no-deps --verbose "${{ env.GMXAPI }}" --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple)
+        $PYTHON -m pip install --no-clean --verbose "${{ env.GMXAPI }}" --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple)
         (cd /tmp && bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh)
         git tag --list
         pip list

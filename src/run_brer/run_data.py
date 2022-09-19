@@ -3,8 +3,8 @@
 import json
 import typing
 
-from run_brer.metadata import MetaData
-from run_brer.pair_data import PairData
+from .metadata import MetaData
+from .pair_data import PairData
 
 
 class GeneralParams(MetaData):
@@ -82,25 +82,58 @@ class PairParams(MetaData):
         """
         self.set(sites=sites, logging_filename="{}.log".format(self.name))
 
-class SimulationInput(typing.TypedDict):
+
+class SimulationInput:
     """Stores the simulation input parameters for all restraints."""
-        schema_version: typing.ClassVar[int]
-	    tpr_file: str
-	    checkpoint: typing.Optional[str]
-    def simulation_input(tpr_file: str, checkpoint: typing.Optional[str] = None) -> SimulationInput:
-	    return {'schema_version': 2, 'tpr_file': tpr_file, 'checkpoint': checkpoint}
+    schema_version: typing.ClassVar[int] = 2
+    tpr_file: str
+    checkpoint: typing.Optional[str]
+
+    def __init__(self,
+                 tpr_file: str,
+                 checkpoint: typing.Optional[str] = None,
+                 schema_version: typing.Optional[int] = None):
+        if schema_version is not None:
+            if schema_version != self.schema_version:
+                raise ValueError(f'Unsupported schema version: {schema_version}')
+        self.tpr_file = tpr_file
+        self.checkpoint = checkpoint
+
+    def asdict(self):
+        return {
+            'schema_version': self.schema_version,
+            'tpr_file': self.tpr_file,
+            'checkpoint': self.checkpoint
+        }
+
+    @classmethod
+    def decode(cls, *args, **kwargs):
+        usage = 'Provide either a mapping object or appropriate key word arguments.'
+        if len(kwargs) == 0:
+            if len(args) > 1:
+                raise TypeError('Unexpected positional argument(s). ' + usage)
+            else:
+                kwargs = args[0]
+        else:
+            if len(args) != 0:
+                raise TypeError(
+                    'Cannot accept both positional and key word arguments.' + usage)
+        return cls(**kwargs)
 
 
 class RunData:
     """Stores (and manipulates, to a lesser extent) all the metadata for a BRER
     run."""
+    general_params: GeneralParams
+    pair_params: typing.MutableMapping[str, PairParams]
+    simulation_input: typing.Optional[SimulationInput] = None
 
     def __init__(self):
         """The full set of metadata for a single BRER run include both the
         general parameters and the pair-specific parameters."""
         self.general_params = GeneralParams()
         self.general_params.set_to_defaults()
-        self.pair_params: typing.MutableMapping[str, PairParams] = {}
+        self.pair_params = {}
         self.__names = []
 
     def set(self, name=None, **kwargs):
@@ -196,7 +229,8 @@ class RunData:
 
         return {
             'general parameters': self.general_params.get_as_dictionary(),
-            'pair parameters': pair_param_dict
+            'pair parameters': pair_param_dict,
+            'simulation_input': self.simulation_input.asdict()
         }
 
     def from_dictionary(self, data: dict):
@@ -211,6 +245,9 @@ class RunData:
         for name in data['pair parameters'].keys():
             self.pair_params[name] = PairParams(name)
             self.pair_params[name].set_from_dictionary(data['pair parameters'][name])
+        simulation_input_dict = data.get('simulation_input', None)
+        if simulation_input_dict is not None:
+            self.simulation_input = SimulationInput.decode(**simulation_input_dict)
 
     def from_pair_data(self, pd: PairData):
         """Load some of the run metadata from a PairData object. Useful at the

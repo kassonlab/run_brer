@@ -46,8 +46,10 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install GROMACS
       run: |
+        ccache -s
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_2019.sh
+        ccache -s
     - name: Test
       timeout-minutes: 8
       run: |
@@ -114,9 +116,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install GROMACS
       run: |
+        ccache -s
         . $HOME/venv/bin/activate
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         BRANCH="${GROMACS}" bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_branch.sh
+        ccache -s
     - name: Test
       timeout-minutes: 8
       run: |
@@ -184,9 +188,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install GROMACS
       run: |
+        ccache -s
         . $HOME/venv/bin/activate
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         BRANCH="${GROMACS}" bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_branch.sh
+        ccache -s
     - name: Test
       timeout-minutes: 8
       run: |
@@ -265,9 +271,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install GROMACS
       run: |
+        ccache -s
         . $HOME/venv/bin/activate
         . ${GITHUB_WORKSPACE}/ci_scripts/set_compilers
         BRANCH="${GROMACS}" bash -x ${GITHUB_WORKSPACE}/ci_scripts/install_gromacs_branch.sh
+        ccache -s
     - name: Test
       timeout-minutes: 8
       run: |

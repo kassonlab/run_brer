@@ -135,7 +135,14 @@ jobs:
         versioningit .
         $PYTHON -m build
         pip install dist/*whl
-        $PYTHON -m pytest -rA -l --log-cli-level=info --cov=run_brer tests
+        $PYTHON -m pytest -rA -l --log-cli-level=info --cov=run_brer --cov-report=xml tests
+    - name: "Upload coverage to Codecov"
+      continue-on-error: true
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: true
+        name: codecov-${{ env.GMXAPI }}-${{ env.GROMACS }}-${{ matrix.python-version }}
     - name: "Upload artifacts"
       if: failure()
       uses: actions/upload-artifact@v3
@@ -231,6 +238,7 @@ jobs:
     env:
       PY: "3.9"
       GROMACS: main
+      GMXAPI: "gmxapi==0.4.0b1"
     steps:
     - name: Prepare OS
       run: |
@@ -258,7 +266,7 @@ jobs:
         . $HOME/venv/bin/activate
         export PYTHON=$VIRTUAL_ENV/bin/python
         $PYTHON -m pip install --upgrade pip setuptools wheel
-        pip install --upgrade packaging
+        pip install --upgrade packaging cmake
         pip install --no-cache-dir --upgrade --no-binary ":all:" --force-reinstall networkx mpi4py MarkupSafe
         pip install pytest codecov pytest-cov numpy
     - uses: actions/checkout@v2
@@ -277,7 +285,7 @@ jobs:
         source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
         mkdir -p $HOME/pip-tmp && \
         TMPDIR=$HOME/pip-tmp \
-        $PYTHON -m pip install --no-clean --verbose --index-url https://test.pypi.org/simple/ --pre gmxapi
+        pip install --no-clean --verbose --no-deps --extra-index-url https://test.pypi.org/simple/ --pre "${{ env.GMXAPI }}"
         bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh
         git tag --list
         pip list

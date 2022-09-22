@@ -282,9 +282,10 @@ jobs:
         . ./ci_scripts/set_compilers
         . $HOME/venv/bin/activate
         pip install -r requirements.txt
+        pip install "cmake>=3.16" "pybind11>=2.6" "setuptools>=42.0" "wheel"
         export PYTHON=$HOME/venv/bin/python
-        source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
-        mkdir -p $HOME/pip-tmp && \
+        source $HOME/install/gromacs-${GROMACS}/bin/GMXRC
+        mkdir -p $HOME/pip-tmp
         TMPDIR=$HOME/pip-tmp \
         pip install --no-clean --no-build-isolation --verbose --extra-index-url https://test.pypi.org/simple/ --pre "${{ env.GMXAPI }}"
         bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh

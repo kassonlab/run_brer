@@ -237,7 +237,7 @@ jobs:
     env:
       PY: "3.9"
       GROMACS: main
-      GMXAPI: "gmxapi==0.4.0a4"
+      GMXAPI: "gmxapi==0.4.0a5"
     steps:
     - name: Prepare OS
       run: |

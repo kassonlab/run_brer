@@ -73,7 +73,7 @@ jobs:
       with:
         name: ${{ github.job }}-${{ env.GROMACS }}
         path: |
-          ~/install/
+          ~/install/gromacs-${{ env.GROMACS }}/share/
           ~/gmxapi/build/
 
   gmx2021:
@@ -146,7 +146,7 @@ jobs:
       with:
         name: ${{ github.job }}-${{ env.GROMACS }}
         path: |
-          ~/install/
+          ~/install/gromacs-${{ env.GROMACS }}/share/
           ~/pip-tmp/
 
   gmx2022:
@@ -229,7 +229,7 @@ jobs:
       with:
         name: ${{ github.job }}-${{ env.GROMACS }}
         path: |
-          ~/install/
+          ~/install/gromacs-${{ env.GROMACS }}/share/
           ~/pip-tmp/
 
   gmx-dev:
@@ -286,7 +286,7 @@ jobs:
         source $HOME/install/gromacs-${GROMACS}/bin/GMXRC && \
         mkdir -p $HOME/pip-tmp && \
         TMPDIR=$HOME/pip-tmp \
-        pip install --no-clean --verbose --no-deps --extra-index-url https://test.pypi.org/simple/ --pre "${{ env.GMXAPI }}"
+        pip install --no-clean --no-build-isolation --verbose --extra-index-url https://test.pypi.org/simple/ --pre "${{ env.GMXAPI }}"
         bash -x ${GITHUB_WORKSPACE}/ci_scripts/brer_restraint.sh
         git tag --list
         pip list
@@ -302,5 +302,5 @@ jobs:
       with:
         name: ${{ github.job }}-${{ env.GROMACS }}
         path: |
-          ~/install/
+          ~/install/gromacs-${{ env.GROMACS }}/share/
           ~/pip-tmp/
